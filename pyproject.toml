@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "archerdfu.core"
-version = "1.0.0"
+version = "1.0.0.post0"
 authors = [
     { name="o-murphy" },
 ]
 
-description = "Utils for reading/writing memory in Archer legacy NXP LPC based devices"
+description = "PyDfuUtil binds for archerdfu library"
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["ARCHER", "archerdfu", "pydfuutil", 'dfuutil']
@@ -35,11 +35,9 @@ dependencies = [
 
 
 [project.urls]
-"Homepage" = "https://github.com/archerdfu/archerdfu-core"
-"Bug Reports" = "https://github.com/archerdfu/archerdfu-core/issues"
-#"Funding" = "https://donate.pypi.org"
-#"Say Thanks!" = ""
-"Source" = "https://github.com/archerdfu/archerdfu-core"
+"Homepage" = "https://github.com/archerdfu/archerdfu.core"
+"Bug Reports" = "https://github.com/archerdfu/archerdfu.core/issues"
+"Source" = "https://github.com/archerdfu/archerdfu.core"
 
 [tool.setuptools]
 py-modules = ["archerdfu.core"]
