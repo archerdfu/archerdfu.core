@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "archerdfu.core"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
     { name="o-murphy" },
 ]
@@ -29,7 +29,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
-    'pydfuutil>=0.0.1b4',
+    'pydfuutil>=0.0.2b0',
     'rich>=13.7.0'
 ]
 

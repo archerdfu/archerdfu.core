@@ -102,7 +102,7 @@ class DfuDevice(usb.core.Device):
 
         self.num_connect_attempts = num_connect_attempts
 
-        dfu.dfu_init(dfu_timeout if dfu_timeout else 5000)
+        dfu.init(dfu_timeout if dfu_timeout else 5000)
         # dfu.dfu_debug(logging.INFO)
 
     @property
@@ -137,35 +137,35 @@ class DfuDevice(usb.core.Device):
             raise ConnectionError(f'No DFU interface found: {self._str()}')
 
     def get_status(self) -> (int, dict):
-        _, status = dfu.dfu_get_status(self, self.dfu_intf)
+        _, status = dfu.get_status(self, self.dfu_intf)
         sleep(status.bwPollTimeout)
         sleep(0.5)
         return _, status
 
     def is_connect_valid(self):
         _, status = self.get_status()
-        while status.bState != dfu.DFUState.DFU_IDLE:
+        while status.bState != dfu.State.DFU_IDLE:
 
-            if status.bState in [dfu.DFUState.APP_IDLE, dfu.DFUState.APP_DETACH]:
+            if status.bState in [dfu.State.APP_IDLE, dfu.State.APP_DETACH]:
                 return False
-            elif status.bState == dfu.DFUState.DFU_ERROR:
-                if dfu.dfu_clear_status(self, self.dfu_intf) < 0:
+            elif status.bState == dfu.State.DFU_ERROR:
+                if dfu.clear_status(self, self.dfu_intf) < 0:
                     return False
                 _, status = self.get_status()
-            elif status.bState in [dfu.DFUState.DFU_DOWNLOAD_IDLE, dfu.DFUState.DFU_UPLOAD_IDLE]:
-                if dfu.dfu_abort(self, self.dfu_intf) < 0:
+            elif status.bState in [dfu.State.DFU_DOWNLOAD_IDLE, dfu.State.DFU_UPLOAD_IDLE]:
+                if dfu.abort(self, self.dfu_intf) < 0:
                     return False
                 _, status = self.get_status()
             else:
                 break
 
-        if status.bStatus != dfu.DFUStatus.OK:
-            if dfu.dfu_clear_status(self, self.dfu_intf) < 0:
+        if status.bStatus != dfu.Status.OK:
+            if dfu.clear_status(self, self.dfu_intf) < 0:
                 return False
             _, status = self.get_status()
             if _ < 0:
                 return False
-            if status.bStatus != dfu.DFUStatus.OK:
+            if status.bStatus != dfu.Status.OK:
                 return False
             sleep(status.bwPollTimeout)
 
@@ -180,7 +180,7 @@ class DfuDevice(usb.core.Device):
     def dfu_detach(self) -> int:
         detach_timeout = self.dfu_descriptor.wDetachTimeOut / 10000
         detach_timeout = math.ceil(detach_timeout)
-        dfu.dfu_detach(self, self.dfu_intf, 1000)
+        dfu.detach(self, self.dfu_intf, 1000)
         sleep(1)
         return detach_timeout
 
@@ -276,7 +276,7 @@ class DfuDevice(usb.core.Device):
 
         while True:
 
-            rc = dfu.dfu_upload(self, self.dfu_intf, page, USB_PAGE),
+            rc = dfu.upload(self, self.dfu_intf, page, USB_PAGE),
             page += 1
 
             if len(rc[0]) < 0:
@@ -297,7 +297,7 @@ class DfuDevice(usb.core.Device):
             if len(rc[0]) < USB_PAGE or (len(ret) >= total >= 0):
                 break
 
-        dfu.dfu_upload(self, self.dfu_intf, page, 0),
+        dfu.upload(self, self.dfu_intf, page, 0),
 
         DFU_PROGRESS.update(
             upload_task, advance=0,
@@ -328,20 +328,20 @@ class DfuDevice(usb.core.Device):
         while True:
 
             part = data[part_num * page_size:part_num * page_size + page_size]
-            rc = dfu.dfu_download(self, self.dfu_intf, page, part)
+            rc = dfu.download(self, self.dfu_intf, page, part)
 
             _, status = None, None
             while True:
-                _, status = dfu.dfu_get_status(self, self.dfu_intf)
+                _, status = dfu.get_status(self, self.dfu_intf)
 
                 if _ < 0:
                     return part_num * page_size + page_size
 
-                if status.bState in (dfu.DFUState.DFU_DOWNLOAD_IDLE, dfu.DFUState.DFU_ERROR):
+                if status.bState in (dfu.State.DFU_DOWNLOAD_IDLE, dfu.State.DFU_ERROR):
                     break
 
-            if status.bStatus != dfu.DFUStatus.OK:
-                raise IOError(dfu.dfu_state_to_string(status.bState))
+            if status.bStatus != dfu.Status.OK:
+                raise IOError(dfu.state_to_string(status.bState))
 
             page += 1
             part_num += 1
@@ -364,7 +364,7 @@ class DfuDevice(usb.core.Device):
             if rc < page_size or ret >= total >= 0:
                 break
 
-        dfu.dfu_download(self, self.dfu_intf, page, 0),
+        dfu.download(self, self.dfu_intf, page, 0),
 
         DFU_PROGRESS.update(
             download_task, advance=0,
