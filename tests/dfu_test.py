@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import logging
 
-from archerdfu.core import find
+from archerdfu.core import find, dfu_progress
 from pydfuutil.logger import logger
 
 logger.setLevel(logging.DEBUG)
@@ -38,6 +38,7 @@ class TestDfuDevice(TestCase):
     #     # Assert the first bytes to check correctness
     #     self.assertEqual(d1[:6], b'ARCHER')
 
+    @dfu_progress
     def test_upload_mem_table(self):
         usb_page = 2048
         spi_fi_chunk = 4096
@@ -51,6 +52,34 @@ class TestDfuDevice(TestCase):
             mem_table_offset + spi_fi_chunk,
             mem_table_size - spi_fi_chunk, usb_page
         )
-        print(len(h1), len(d1))
+
         self.assertEqual(len(h1), spi_fi_chunk)
         self.assertEqual(len(d1), mem_table_size-spi_fi_chunk)
+
+        r1 = self.dev.do_download(
+            mem_table_offset,
+            h1, usb_page
+        )
+        self.assertEqual(r1, len(h1))
+        self.dev.get_status()
+
+        r2 = self.dev.do_download(
+            mem_table_offset + spi_fi_chunk,
+            d1, usb_page
+        )
+        self.assertEqual(r2, len(d1))
+        self.dev.get_status()
+
+        h2 = self.dev.do_upload(
+            mem_table_offset,
+            spi_fi_chunk, usb_page
+        )
+        self.assertEqual(h1, h2)
+        self.dev.get_status()
+
+        d2 = self.dev.do_upload(
+            mem_table_offset + spi_fi_chunk,
+            mem_table_size - spi_fi_chunk, usb_page
+        )
+        self.assertEqual(d1, d2)
+        self.dev.get_status()
